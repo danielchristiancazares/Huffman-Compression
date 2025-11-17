@@ -12,11 +12,13 @@ build/
 # Executables
 compress
 uncompress
+unit_tests
 
 # Test output files
 *.huf
 compressed_*
 decompressed_*
+test_output/
 
 # Editor/IDE files
 *.swp

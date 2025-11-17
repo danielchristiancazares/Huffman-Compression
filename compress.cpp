@@ -43,15 +43,14 @@ int main( int argc, char *argv[] ) {
 
     BitInputStream bis( fin );
     /* Read in the frequencies. */
-    while( ( cnext = fin.get() ) ) {
-        if( fin.eof() ) {
-            break;
-        }
+    cnext = fin.get();
+    while( !fin.eof() ) {
         freqs[ ( int ) cnext ] += 1;
         ++fsize;
         if( freqs[ ( int ) cnext ] == 1 ) {
             ++symbols;
         }
+        cnext = fin.get();
     }
     cout << "done.\n";
 

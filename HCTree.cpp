@@ -1,13 +1,23 @@
 #include <fstream>
 #include <queue>
 #include <stack>
-#include <fstream>
 #include <iostream>
 
 #include "HCTree.hpp"
 
+/* Helper function to recursively delete tree nodes */
+void HCTree::deleteTree(HCNode* node) {
+    if (node == nullptr) {
+        return;
+    }
+    deleteTree(node->c0);
+    deleteTree(node->c1);
+    delete node;
+}
+
 /* Destructor for HCTree */
 HCTree::~HCTree() {
+    deleteTree(root);
 }
 
 /* build() for HCTree */
@@ -54,48 +64,64 @@ void HCTree::build( const vector<int>& freqs) {
 }
 
 void HCTree::encode( byte symbol, ofstream& out ) const {
-    vector<int> code;
-    HCNode* node;
-
     /* Check if symbol exists as a leaf. */
-    if( this->leaves[symbol]->symbol == symbol ) {
-        node = this->leaves[symbol];
+    if( this->leaves[symbol] == nullptr ) {
+        return;
+    }
 
-        while( node->p ) {
-            if( node->symbol == node->p->c0->symbol ) {
-                code.push_back( 0 );
-            }
-            else if( node->symbol == node->p->c1->symbol ) {
-                code.push_back( 1 );
-            }
-            node = node->p;
-        }
+    HCNode* node = this->leaves[symbol];
 
-        while( !code.empty() ) {
-            out << code.back();
-            code.pop_back();
+    /* Special case: single symbol (root is a leaf, no parent) */
+    if( node->p == nullptr ) {
+        out << '0';
+        return;
+    }
+
+    vector<int> code;
+
+    while( node->p ) {
+        if( node == node->p->c0 ) {
+            code.push_back( 0 );
         }
+        else {
+            code.push_back( 1 );
+        }
+        node = node->p;
+    }
+
+    while( !code.empty() ) {
+        out << code.back();
+        code.pop_back();
     }
 }
 
 void HCTree::encode( byte symbol, BitOutputStream& out) const {
-    vector<int> code;
-    HCNode* node;
-
     /* Check if symbol exists as a leaf. */
-    if( ( this->leaves[symbol]->symbol ) == symbol ) {
-        node = this->leaves[symbol];
-        while( node->p ) {
-            if( ( node->symbol ) == ( node->p->c0->symbol ) ) {
-                code.push_back( 0 );
-            } else {
-                code.push_back( 1 );
-            }
-            node = node->p;
+    if( this->leaves[symbol] == nullptr ) {
+        return;
+    }
+
+    HCNode* node = this->leaves[symbol];
+
+    /* Special case: single symbol (root is a leaf, no parent) */
+    if( node->p == nullptr ) {
+        out.writeBit( 0 );
+        return;
+    }
+
+    vector<int> code;
+
+    while( node->p ) {
+        if( node == node->p->c0 ) {
+            code.push_back( 0 );
+        } else {
+            code.push_back( 1 );
         }
-        for( vector<int>::reverse_iterator it = code.rbegin(); it != code.rend(); ++it ) {
-            out.writeBit( *it );
-        }
+        node = node->p;
+    }
+
+    for( vector<int>::reverse_iterator it = code.rbegin(); it != code.rend(); ++it ) {
+        out.writeBit( *it );
     }
 }
 
@@ -103,11 +129,11 @@ int HCTree::decode( BitInputStream& in ) const {
     HCNode *node = root;
     bitset<1> bit;
 
-    while( ( node->c0 ) || ( node->c1 ) ) {
+    while( node->c0 && node->c1 ) {
         bit = in.readBit();
         if( bit == 1 ) {
             node = node->c1;
-        } else { 
+        } else {
             node = node->c0;
         }
     }
@@ -119,12 +145,12 @@ int HCTree::decode( ifstream& in ) const {
     HCNode *node = root;
     bitset<1> bit;
 
-    while( ( node->c0 ) || ( node->c1 ) ) {
+    while( node->c0 && node->c1 ) {
         bit = in.get();
         bit &= 1;
         if( bit == 1 ) {
             node = node->c1;
-        } else { 
+        } else {
             node = node->c0;
         }
     }

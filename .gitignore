@@ -6,6 +6,9 @@
 *.gch
 *.pch
 
+# Build directory
+build/
+
 # Executables
 compress
 uncompress

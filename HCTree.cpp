@@ -71,9 +71,9 @@ void HCTree::encode( byte symbol, ofstream& out ) const {
 
     HCNode* node = this->leaves[symbol];
 
-    /* Special case: single symbol (root is a leaf, no parent) */
+    /* Special case: single symbol (root is a leaf, no parent)
+     * No bits needed - symbol is unambiguous from frequency header */
     if( node->p == nullptr ) {
-        out << '0';
         return;
     }
 
@@ -103,9 +103,9 @@ void HCTree::encode( byte symbol, BitOutputStream& out) const {
 
     HCNode* node = this->leaves[symbol];
 
-    /* Special case: single symbol (root is a leaf, no parent) */
+    /* Special case: single symbol (root is a leaf, no parent)
+     * No bits needed - symbol is unambiguous from frequency header */
     if( node->p == nullptr ) {
-        out.writeBit( 0 );
         return;
     }
 

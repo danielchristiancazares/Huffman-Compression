@@ -22,7 +22,7 @@ int main( int argc, char *argv[] ) {
     }
 
     vector<int> freqs( 256, 0 );
-    int fsize = 0;
+    size_t fsize = 0;
     HCTree hufftree;
 
     fin.clear();
@@ -40,12 +40,18 @@ int main( int argc, char *argv[] ) {
     }
 
     fout.open( argv[2], ios::binary );
-    
+
+    /* Check to see if the output file opened correctly. */
+    if( !fout.is_open() ) {
+        fin.close();
+        return EXIT_FAILURE;
+    }
+
     BitInputStream bis( fin );
 
-    byte tmp = 0;  
+    byte tmp = 0;
 
-    for( int i = 0; i < fsize; ++i ) {
+    for( size_t i = 0; i < fsize; ++i ) {
         tmp = hufftree.decode( bis );
         fout.write( (char *) &tmp, 1);
     } 

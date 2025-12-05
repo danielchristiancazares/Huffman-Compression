@@ -276,6 +276,101 @@ TEST(integration_memory_leak_check) {
 }
 
 // ============================================================================
+// Regression Tests for Bug Fixes
+// ============================================================================
+
+// Bug #1: BitOutputStream::flush() should not write when buffer is empty
+TEST(regression_flush_empty_buffer) {
+    // Create a file and flush without writing any bits
+    ofstream out("test_output/regression_empty_flush.bin", ios::binary);
+    BitOutputStream bos(out);
+    bos.flush();  // Should not write anything
+    out.close();
+
+    // Verify file is empty (0 bytes)
+    ifstream in("test_output/regression_empty_flush.bin", ios::binary);
+    in.seekg(0, ios::end);
+    streampos size = in.tellg();
+    in.close();
+
+    ASSERT(size == 0, "Flushing empty buffer should not write any bytes");
+}
+
+// Bug #2: BitInputStream::readBit() should return -1 on EOF
+TEST(regression_readbit_eof) {
+    // Create a file with exactly 1 byte
+    ofstream out("test_output/regression_eof.bin", ios::binary);
+    out.put(0xFF);
+    out.close();
+
+    ifstream in("test_output/regression_eof.bin", ios::binary);
+    BitInputStream bis(in);
+
+    // Read all 8 bits
+    for (int i = 0; i < 8; i++) {
+        int bit = bis.readBit();
+        ASSERT(bit == 1, "All bits should be 1 for 0xFF");
+    }
+
+    // Next read should return -1 (EOF)
+    int eof_bit = bis.readBit();
+    in.close();
+
+    ASSERT(eof_bit == -1, "readBit() should return -1 on EOF");
+}
+
+// Bug #3: HCTree::decode() should return -1 on empty tree (null root)
+TEST(regression_decode_empty_tree) {
+    HCTree tree;
+    vector<int> freqs(256, 0);  // All zeros - no symbols
+    tree.build(freqs);
+
+    // Create a dummy input stream
+    ofstream out("test_output/regression_decode_empty.bin", ios::binary);
+    out.put(0xFF);
+    out.close();
+
+    ifstream in("test_output/regression_decode_empty.bin", ios::binary);
+    BitInputStream bis(in);
+
+    // Decoding from empty tree should return -1, not crash
+    int result = tree.decode(bis);
+    in.close();
+
+    ASSERT(result == -1, "decode() on empty tree should return -1");
+}
+
+// Bug #3 related: HCTree::decode() should return -1 on EOF during traversal
+TEST(regression_decode_eof_during_traversal) {
+    HCTree tree;
+    vector<int> freqs(256, 0);
+    freqs['A'] = 10;
+    freqs['B'] = 5;
+    freqs['C'] = 3;
+    freqs['D'] = 1;
+    tree.build(freqs);
+
+    // Create a file with insufficient bits to complete decoding
+    // (just 1 bit when tree depth requires more)
+    ofstream out("test_output/regression_decode_eof.bin", ios::binary);
+    out.put(0x00);  // Only 8 bits available
+    out.close();
+
+    ifstream in("test_output/regression_decode_eof.bin", ios::binary);
+    BitInputStream bis(in);
+
+    // Try to decode multiple times to exhaust the input
+    int result = -999;
+    for (int i = 0; i < 20; i++) {  // More decodes than bits available
+        result = tree.decode(bis);
+        if (result == -1) break;  // EOF detected
+    }
+    in.close();
+
+    ASSERT(result == -1, "decode() should return -1 when EOF reached during traversal");
+}
+
+// ============================================================================
 // Main Test Runner
 // ============================================================================
 
@@ -325,6 +420,14 @@ int main() {
     run_test_integration_null_byte_handling();
     run_test_integration_all_bytes();
     run_test_integration_memory_leak_check();
+    cout << endl;
+
+    cout << "Regression Tests (Bug Fixes):" << endl;
+    cout << "-----------------------------" << endl;
+    run_test_regression_flush_empty_buffer();
+    run_test_regression_readbit_eof();
+    run_test_regression_decode_empty_tree();
+    run_test_regression_decode_eof_during_traversal();
     cout << endl;
 
     cout << "=========================================" << endl;

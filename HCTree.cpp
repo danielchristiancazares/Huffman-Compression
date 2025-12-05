@@ -126,11 +126,20 @@ void HCTree::encode( byte symbol, BitOutputStream& out) const {
 }
 
 int HCTree::decode( BitInputStream& in ) const {
-    HCNode *node = root;
-    bitset<1> bit;
+    /* Check for null root (empty tree) */
+    if( root == nullptr ) {
+        return -1;
+    }
 
+    HCNode *node = root;
+
+    /* Traverse tree: internal nodes have both children */
     while( node->c0 && node->c1 ) {
-        bit = in.readBit();
+        int bit = in.readBit();
+        /* Check for EOF */
+        if( bit == -1 ) {
+            return -1;
+        }
         if( bit == 1 ) {
             node = node->c1;
         } else {
@@ -142,13 +151,21 @@ int HCTree::decode( BitInputStream& in ) const {
 }
 
 int HCTree::decode( ifstream& in ) const {
-    HCNode *node = root;
-    bitset<1> bit;
+    /* Check for null root (empty tree) */
+    if( root == nullptr ) {
+        return -1;
+    }
 
+    HCNode *node = root;
+
+    /* Traverse tree: internal nodes have both children */
     while( node->c0 && node->c1 ) {
-        bit = in.get();
-        bit &= 1;
-        if( bit == 1 ) {
+        int c = in.get();
+        /* Check for EOF */
+        if( c == EOF ) {
+            return -1;
+        }
+        if( c & 1 ) {
             node = node->c1;
         } else {
             node = node->c0;

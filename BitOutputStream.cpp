@@ -29,7 +29,10 @@ void BitOutputStream::writeBit( int bit ) {
     Return Value: None
 */
 void BitOutputStream::flush() {
-    out.write( (char *) &buf, 1 );
+    /* Only write if there are bits in the buffer */
+    if( bufi > 0 ) {
+        out.write( (char *) &buf, 1 );
+    }
     out.flush();
     buf = bufi = 0;
 }

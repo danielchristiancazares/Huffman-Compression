@@ -41,7 +41,6 @@ int main( int argc, char *argv[] ) {
     size_t fsize = 0;
     unsigned int symbols = 0;
 
-    BitInputStream bis( fin );
     /* Read in the frequencies. */
     cnext = fin.get();
     while( !fin.eof() ) {

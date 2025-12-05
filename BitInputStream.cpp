@@ -15,12 +15,18 @@ void BitInputStream::fill() {
    int BitInputStream::readBit()
    Description: Reads 1 bit from the 8 bit buffer.
    Parameters: None
-   Return value: int bit - 0 or 1 bit retrieved from buffer.
+   Return value: int bit - 0 or 1 bit retrieved from buffer, -1 on EOF.
 */
 int BitInputStream::readBit() {
     /* If the buffer is empty, retrieve next byte. */
     if( bufi > 7 ) {
-        this->fill();
+        int byte = this->readByte();
+        /* Check for EOF */
+        if( byte == -1 ) {
+            return -1;
+        }
+        buf = byte;
+        bufi = 0;
     }
     int bit = buf[ 7 - bufi ];
     ++bufi;

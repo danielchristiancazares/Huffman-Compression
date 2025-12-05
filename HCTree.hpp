@@ -5,7 +5,6 @@
 #include <vector>
 #include <fstream>
 #include "HCNode.hpp"
-#include "HCTree.hpp"
 #include "BitInputStream.hpp"
 #include "BitOutputStream.hpp"
 
@@ -31,6 +30,9 @@ class HCTree {
 private:
     HCNode* root;
     vector<HCNode*> leaves;
+
+    /** Helper function to recursively delete tree nodes */
+    void deleteTree(HCNode* node);
 
 public:
     explicit HCTree() : root(0) {

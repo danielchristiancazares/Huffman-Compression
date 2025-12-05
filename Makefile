@@ -1,10 +1,12 @@
 # Kyle Barron-Kraus <kbarronk>
 
-BIN_NAMES = compress uncompress
+BIN_NAMES = compress uncompress unit_tests
 
 compress_SOURCES = compress.cpp HCTree.cpp HCNode.cpp \
                    BitInputStream.cpp BitOutputStream.cpp
 uncompress_SOURCES = uncompress.cpp HCTree.cpp HCNode.cpp \
+                     BitInputStream.cpp BitOutputStream.cpp
+unit_tests_SOURCES = unit_tests.cpp HCTree.cpp HCNode.cpp \
                      BitInputStream.cpp BitOutputStream.cpp
 
 CXX = g++
@@ -40,6 +42,19 @@ $(foreach BIN,$(BIN_NAMES),$(eval $(call BIN_T,$(BIN))))
 DEP_FILES = $(OBJECTS:.o=.d)
 -include $(DEP_FILES)
 
+.PHONY: test
+test: all
+	@echo "Running component unit tests..."
+	@./unit_tests
+	@echo ""
+	@echo "Running integration test suite..."
+	@./test.sh
+
+.PHONY: test-verbose
+test-verbose: all
+	@echo "Running test suite (verbose)..."
+	@bash -x ./test.sh
+
 .PHONY: clean
 clean:
-	@$(RM) -r $(BIN_NAMES) $(BUILD_PATH)
+	@$(RM) -r $(BIN_NAMES) $(BUILD_PATH) test_output
